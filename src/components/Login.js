@@ -12,6 +12,36 @@ import {
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import axios from '../config/axios';
+import { styled } from '@mui/material/styles';
+
+const StyledContainer = styled(Container)(({ theme }) => ({
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  position: 'relative',
+  zIndex: 1,
+  '&::before': {
+    content: '""',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.pexels.com/photos/3657154/pexels-photo-3657154.jpeg')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    zIndex: -1
+  }
+}));
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  width: '100%',
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+}));
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -94,12 +124,32 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h5" align="center" gutterBottom>
-            Spirit11 Login
-          </Typography>
+    <StyledContainer maxWidth="sm">
+      <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <StyledPaper elevation={6}>
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Typography 
+              component="h1" 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700,
+                color: 'primary.main',
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+              }}
+            >
+              Spirit11
+            </Typography>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: 'text.secondary',
+                mt: 1 
+              }}
+            >
+              Your Fantasy Cricket Journey Begins Here
+            </Typography>
+          </Box>
 
           {errors.submit && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -142,21 +192,40 @@ const Login = ({ onLogin }) => {
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              sx={{ 
+                mt: 3, 
+                mb: 2,
+                py: 1.5,
+                borderRadius: 2,
+                fontSize: '1.1rem',
+                textTransform: 'none',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+              }}
               disabled={loading}
             >
               {loading ? <CircularProgress size={24} /> : 'Sign In'}
             </Button>
           </form>
 
-          <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Link component={RouterLink} to="/register" variant="body2">
-              Don't have an account? Register as User
+          <Box sx={{ 
+            mt: 2, 
+            textAlign: 'center',
+            '& a': {
+              color: 'primary.main',
+              textDecoration: 'none',
+              fontWeight: 500,
+              '&:hover': {
+                textDecoration: 'underline',
+              }
+            }
+          }}>
+            <Link component={RouterLink} to="/register" variant="body1">
+              New to Spirit11? Join the game!
             </Link>
           </Box>
-        </Paper>
+        </StyledPaper>
       </Box>
-    </Container>
+    </StyledContainer>
   );
 };
 

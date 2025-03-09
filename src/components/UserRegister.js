@@ -14,6 +14,36 @@ import {
   Alert
 } from '@mui/material';
 import axios from '../config/axios';
+import { styled } from '@mui/material/styles';
+
+const StyledContainer = styled(Container)(({ theme }) => ({
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  position: 'relative',
+  zIndex: 1,
+  '&::before': {
+    content: '""',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.pexels.com/photos/3657154/pexels-photo-3657154.jpeg')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    zIndex: -1
+  }
+}));
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  width: '100%',
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+}));
 
 const UserRegister = () => {
   const navigate = useNavigate();
@@ -128,14 +158,14 @@ const UserRegister = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <StyledContainer component="main" maxWidth="xs">
       <Box sx={{
         marginTop: 8,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
       }}>
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+        <StyledPaper elevation={3}>
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Create Your Account
           </Typography>
@@ -238,7 +268,7 @@ const UserRegister = () => {
               </Button>
             </Typography>
           </Box>
-        </Paper>
+        </StyledPaper>
       </Box>
 
       <Dialog open={showSuccess} onClose={() => setShowSuccess(false)}>
@@ -249,7 +279,7 @@ const UserRegister = () => {
           </Typography>
         </DialogContent>
       </Dialog>
-    </Container>
+    </StyledContainer>
   );
 };
 
