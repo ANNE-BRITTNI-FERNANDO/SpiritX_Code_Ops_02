@@ -3,133 +3,171 @@ const mongoose = require('mongoose');
 const playerSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Player name is required'],
+    required: true,
     trim: true
   },
   university: {
     type: String,
-    required: [true, 'University name is required'],
+    required: true,
     trim: true
   },
   role: {
     type: String,
-    required: [true, 'Player role is required'],
-    enum: ['Batsman', 'Bowler', 'AllRounder', 'WicketKeeper'],
-    trim: true
+    required: true,
+    enum: ['Batsman', 'Bowler', 'All-rounder', 'WicketKeeper'],
+    set: function(role) {
+      // Normalize role names
+      const roleMap = {
+        'AllRounder': 'All-rounder',
+        'Wicket Keeper': 'WicketKeeper',
+        'Wicket-Keeper': 'WicketKeeper',
+        'All Rounder': 'All-rounder',
+        'All-Rounder': 'All-rounder'
+      };
+      return roleMap[role] || role;
+    }
   },
   matchesPlayed: {
     type: Number,
-    default: 0,
-    min: [0, 'Matches played cannot be negative']
+    default: 0
   },
-  // Batting Statistics
   runsScored: {
     type: Number,
-    default: 0,
-    min: [0, 'Runs scored cannot be negative']
+    default: 0
   },
   ballsFaced: {
     type: Number,
-    default: 0,
-    min: [0, 'Balls faced cannot be negative']
+    default: 0
   },
   inningsPlayed: {
     type: Number,
-    default: 0,
-    min: [0, 'Innings played cannot be negative']
+    default: 0
   },
-  notOuts: {
-    type: Number,
-    default: 0,
-    min: [0, 'Not outs cannot be negative']
-  },
-  highestScore: {
-    type: Number,
-    default: 0,
-    min: [0, 'Highest score cannot be negative']
-  },
-  fifties: {
-    type: Number,
-    default: 0,
-    min: [0, 'Number of fifties cannot be negative']
-  },
-  hundreds: {
-    type: Number,
-    default: 0,
-    min: [0, 'Number of hundreds cannot be negative']
-  },
-  ducks: {
-    type: Number,
-    default: 0,
-    min: [0, 'Number of ducks cannot be negative']
-  },
-  // Bowling Statistics
   wicketsTaken: {
     type: Number,
-    default: 0,
-    min: [0, 'Wickets taken cannot be negative']
+    default: 0
   },
-  oversBowled: {
+  ballsBowled: {
     type: Number,
-    default: 0,
-    min: [0, 'Overs bowled cannot be negative']
+    default: 0
   },
   runsConceded: {
     type: Number,
-    default: 0,
-    min: [0, 'Runs conceded cannot be negative']
+    default: 0
   },
-  bestBowlingFigures: {
-    wickets: {
-      type: Number,
-      default: 0,
-      min: [0, 'Best bowling wickets cannot be negative']
-    },
-    runs: {
-      type: Number,
-      default: 0,
-      min: [0, 'Best bowling runs cannot be negative']
-    }
+  points: {
+    type: Number,
+    default: 0
+  },
+  price: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,
-  toJSON: {
-    virtuals: true
-  },
-  toObject: {
-    virtuals: true
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Calculate batting average
+playerSchema.methods.calculateBattingAverage = function() {
+  if (this.inningsPlayed === 0) return 0;
+  return this.runsScored / this.inningsPlayed;
+};
+
+// Calculate batting strike rate
+playerSchema.methods.calculateBattingStrikeRate = function() {
+  if (this.ballsFaced === 0) return 0;
+  return (this.runsScored / this.ballsFaced) * 100;
+};
+
+// Calculate bowling strike rate
+playerSchema.methods.calculateBowlingStrikeRate = function() {
+  if (this.wicketsTaken === 0) return undefined;
+  return this.ballsBowled / this.wicketsTaken;
+};
+
+// Calculate bowling average
+playerSchema.methods.calculateBowlingAverage = function() {
+  if (this.wicketsTaken === 0) return undefined;
+  return this.runsConceded / this.wicketsTaken;
+};
+
+// Calculate economy rate
+playerSchema.methods.calculateEconomyRate = function() {
+  if (this.ballsBowled === 0) return 0;
+  const overs = this.ballsBowled / 6; // Convert balls to overs
+  return this.runsConceded / overs;
+};
+
+// Calculate player points
+playerSchema.methods.calculatePoints = function() {
+  const battingAverage = this.calculateBattingAverage();
+  const battingStrikeRate = this.calculateBattingStrikeRate();
+  const economyRate = this.calculateEconomyRate();
+
+  // Calculate batting points: (Batting Strike Rate / 5 + Batting Average × 0.8)
+  const battingPoints = (battingStrikeRate / 5) + (battingAverage * 0.8);
+  
+  // Calculate bowling points
+  let bowlingPoints = 0;
+  if (this.wicketsTaken > 0) {
+    const bowlingStrikeRate = this.ballsBowled / this.wicketsTaken;
+    bowlingPoints = (500 / bowlingStrikeRate) + (140 / economyRate);
+  } else if (this.ballsBowled > 0) {
+    // If no wickets taken but has bowled, only use economy rate component
+    bowlingPoints = 140 / economyRate;
   }
+
+  const totalPoints = battingPoints + bowlingPoints;
+  return totalPoints;
+};
+
+// Calculate player value
+playerSchema.methods.calculateValue = function() {
+  const points = this.calculatePoints();
+  // Value in Rupees = (9 × Points + 100) × 1000
+  const value = (9 * points + 100) * 1000;
+  // Round to nearest 50,000
+  return Math.round(value / 50000) * 50000;
+};
+
+// Pre-save middleware to update points and price
+playerSchema.pre('save', async function(next) {
+  if (this.isModified('runsScored') || 
+      this.isModified('ballsFaced') || 
+      this.isModified('inningsPlayed') || 
+      this.isModified('wicketsTaken') || 
+      this.isModified('ballsBowled') || 
+      this.isModified('runsConceded')) {
+    
+    this.points = this.calculatePoints();
+    this.price = this.calculateValue();
+  }
+  next();
 });
 
 // Virtual fields for calculated statistics
 playerSchema.virtual('battingAverage').get(function() {
-  const innings = this.inningsPlayed - this.notOuts;
-  return innings > 0 ? (this.runsScored / innings).toFixed(2) : 'N/A';
+  return this.calculateBattingAverage();
 });
 
-playerSchema.virtual('strikeRate').get(function() {
-  return this.ballsFaced > 0 
-    ? ((this.runsScored / this.ballsFaced) * 100).toFixed(2) 
-    : 'N/A';
-});
-
-playerSchema.virtual('bowlingAverage').get(function() {
-  return this.wicketsTaken > 0 
-    ? (this.runsConceded / this.wicketsTaken).toFixed(2) 
-    : 'N/A';
-});
-
-playerSchema.virtual('economyRate').get(function() {
-  return this.oversBowled > 0 
-    ? (this.runsConceded / this.oversBowled).toFixed(2) 
-    : 'N/A';
+playerSchema.virtual('battingStrikeRate').get(function() {
+  return this.calculateBattingStrikeRate();
 });
 
 playerSchema.virtual('bowlingStrikeRate').get(function() {
-  const ballsBowled = Math.floor(this.oversBowled) * 6 + (this.oversBowled % 1) * 10;
-  return this.wicketsTaken > 0 
-    ? (ballsBowled / this.wicketsTaken).toFixed(2) 
-    : 'Undefined';
+  const strikeRate = this.calculateBowlingStrikeRate();
+  return strikeRate === undefined ? 'Not Available' : strikeRate;
+});
+
+playerSchema.virtual('bowlingAverage').get(function() {
+  const average = this.calculateBowlingAverage();
+  return average === undefined ? 'Not Available' : average;
+});
+
+playerSchema.virtual('economyRate').get(function() {
+  return this.calculateEconomyRate();
 });
 
 const Player = mongoose.model('Player', playerSchema);

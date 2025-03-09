@@ -38,16 +38,35 @@ const PlayerForm = ({ open, player, onClose, onSave }) => {
     ballsFaced: 0,
     inningsPlayed: 0,
     wicketsTaken: 0,
-    oversBowled: 0,
-    runsConceded: 0,
-    ...player
+    ballsBowled: 0,
+    runsConceded: 0
   });
+
+  useEffect(() => {
+    if (player) {
+      setFormData(player);
+    } else {
+      // Reset form when adding new player
+      setFormData({
+        name: '',
+        university: '',
+        role: '',
+        matchesPlayed: 0,
+        runsScored: 0,
+        ballsFaced: 0,
+        inningsPlayed: 0,
+        wicketsTaken: 0,
+        ballsBowled: 0,
+        runsConceded: 0
+      });
+    }
+  }, [player, open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'role' ? value : Number(value) || value
     }));
   };
 
@@ -55,6 +74,23 @@ const PlayerForm = ({ open, player, onClose, onSave }) => {
     e.preventDefault();
     onSave(formData);
   };
+
+  // Calculate stats for preview
+  const calculateStats = () => {
+    const battingAverage = formData.inningsPlayed === 0 ? 0 : formData.runsScored / formData.inningsPlayed;
+    const battingStrikeRate = formData.ballsFaced === 0 ? 0 : (formData.runsScored / formData.ballsFaced) * 100;
+    const bowlingStrikeRate = formData.wicketsTaken === 0 ? undefined : formData.ballsBowled / formData.wicketsTaken;
+    const bowlingAverage = formData.wicketsTaken === 0 ? undefined : formData.runsConceded / formData.wicketsTaken;
+
+    return {
+      battingAverage: battingAverage.toFixed(2),
+      battingStrikeRate: battingStrikeRate.toFixed(2),
+      bowlingStrikeRate: bowlingStrikeRate === undefined ? 'Not Available' : bowlingStrikeRate.toFixed(2),
+      bowlingAverage: bowlingAverage === undefined ? 'Not Available' : bowlingAverage.toFixed(2)
+    };
+  };
+
+  const stats = calculateStats();
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -99,7 +135,7 @@ const PlayerForm = ({ open, player, onClose, onSave }) => {
               >
                 <MenuItem value="Batsman">Batsman</MenuItem>
                 <MenuItem value="Bowler">Bowler</MenuItem>
-                <MenuItem value="AllRounder">AllRounder</MenuItem>
+                <MenuItem value="All-rounder">All-rounder</MenuItem>
                 <MenuItem value="WicketKeeper">WicketKeeper</MenuItem>
               </TextField>
             </Grid>
@@ -155,7 +191,7 @@ const PlayerForm = ({ open, player, onClose, onSave }) => {
               <TextField
                 fullWidth
                 type="number"
-                label="Wickets"
+                label="Wickets Taken"
                 name="wicketsTaken"
                 value={formData.wicketsTaken}
                 onChange={handleChange}
@@ -167,9 +203,9 @@ const PlayerForm = ({ open, player, onClose, onSave }) => {
               <TextField
                 fullWidth
                 type="number"
-                label="Overs Bowled"
-                name="oversBowled"
-                value={formData.oversBowled}
+                label="Balls Bowled"
+                name="ballsBowled"
+                value={formData.ballsBowled}
                 onChange={handleChange}
                 margin="normal"
                 required
@@ -188,11 +224,28 @@ const PlayerForm = ({ open, player, onClose, onSave }) => {
               />
             </Grid>
           </Grid>
+
+          {/* Stats Preview */}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Calculated Statistics
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Typography>Batting Average: {stats.battingAverage}</Typography>
+                <Typography>Batting Strike Rate: {stats.battingStrikeRate}</Typography>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography>Bowling Strike Rate: {stats.bowlingStrikeRate}</Typography>
+                <Typography>Bowling Average: {stats.bowlingAverage}</Typography>
+              </Grid>
+            </Grid>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" color="primary">
-            Save
+            {player ? 'Update' : 'Add'} Player
           </Button>
         </DialogActions>
       </form>
@@ -232,9 +285,14 @@ const PlayersView = () => {
       await axios.post('/api/players', playerData);
       fetchPlayers();
       setFormOpen(false);
+      setSelectedPlayer(null);
     } catch (err) {
       console.error('Error adding player:', err);
-      setError('Failed to add player');
+      setSnackbar({
+        open: true,
+        message: `Failed to add player: ${err.response?.data?.message || err.message}`,
+        severity: 'error'
+      });
     }
   };
 
@@ -243,19 +301,14 @@ const PlayersView = () => {
       await axios.put(`/api/players/${playerId}`, playerData);
       fetchPlayers();
       setFormOpen(false);
+      setSelectedPlayer(null);
     } catch (err) {
       console.error('Error updating player:', err);
-      setError('Failed to update player');
-    }
-  };
-
-  const handleDeletePlayer = async (playerId) => {
-    try {
-      await axios.delete(`/api/players/${playerId}`);
-      fetchPlayers();
-    } catch (err) {
-      console.error('Error deleting player:', err);
-      setError('Failed to delete player');
+      setSnackbar({
+        open: true,
+        message: `Failed to update player: ${err.response?.data?.message || err.message}`,
+        severity: 'error'
+      });
     }
   };
 
@@ -264,11 +317,20 @@ const PlayersView = () => {
     setFormOpen(true);
   };
 
+  const handleAddNew = () => {
+    setSelectedPlayer(null);
+    setFormOpen(true);
+  };
+
   const handleDelete = async (playerId) => {
     if (!window.confirm('Are you sure you want to delete this player?')) return;
     
     try {
       await axios.delete(`/api/players/${playerId}`);
+      if (selectedPlayer?._id === playerId) {
+        setSelectedPlayer(null);
+        setFormOpen(false);
+      }
       setSnackbar({
         open: true,
         message: 'Player deleted successfully',
@@ -297,13 +359,11 @@ const PlayersView = () => {
         message: `Player ${selectedPlayer ? 'updated' : 'added'} successfully`,
         severity: 'success'
       });
-      setFormOpen(false);
-      setSelectedPlayer(null);
     } catch (err) {
       console.error('Error saving player:', err);
       setSnackbar({
         open: true,
-        message: `Failed to ${selectedPlayer ? 'update' : 'add'} player: ${err.response?.data?.message || err.message}`,
+        message: `Failed to ${selectedPlayer ? 'update' : 'add'} player`,
         severity: 'error'
       });
     }
@@ -328,7 +388,7 @@ const PlayersView = () => {
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
-          onClick={() => setFormOpen(true)}
+          onClick={handleAddNew}
         >
           Add Player
         </Button>
@@ -351,7 +411,7 @@ const PlayersView = () => {
                 <TableCell align="right">Runs</TableCell>
                 <TableCell align="right">Balls Faced</TableCell>
                 <TableCell align="right">Wickets</TableCell>
-                <TableCell align="right">Overs</TableCell>
+                <TableCell align="right">Balls Bowled</TableCell>
                 <TableCell align="right">Runs Conceded</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -367,7 +427,7 @@ const PlayersView = () => {
                   <TableCell align="right">{player.runsScored}</TableCell>
                   <TableCell align="right">{player.ballsFaced}</TableCell>
                   <TableCell align="right">{player.wicketsTaken}</TableCell>
-                  <TableCell align="right">{player.oversBowled}</TableCell>
+                  <TableCell align="right">{player.ballsBowled}</TableCell>
                   <TableCell align="right">{player.runsConceded}</TableCell>
                   <TableCell>
                     <IconButton
@@ -402,11 +462,7 @@ const PlayersView = () => {
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
           {snackbar.message}
         </Alert>
       </Snackbar>

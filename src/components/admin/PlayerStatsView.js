@@ -73,6 +73,69 @@ const PlayerStatsView = () => {
     }
   };
 
+  const formatStatValue = (value) => {
+    if (value === undefined || value === 'Not Available') return 'Not Available';
+    if (typeof value === 'number') {
+      return value.toFixed(2);
+    }
+    return value;
+  };
+
+  const calculateBattingAverage = (player) => {
+    if (player.inningsPlayed === 0) return 0;
+    return player.runsScored / player.inningsPlayed;
+  };
+
+  const calculateBattingStrikeRate = (player) => {
+    if (player.ballsFaced === 0) return 0;
+    return (player.runsScored / player.ballsFaced) * 100;
+  };
+
+  const calculateBowlingStrikeRate = (player) => {
+    if (player.wicketsTaken === 0) return undefined;
+    return player.ballsBowled / player.wicketsTaken;
+  };
+
+  const calculateBowlingAverage = (player) => {
+    if (player.wicketsTaken === 0) return undefined;
+    return player.runsConceded / player.wicketsTaken;
+  };
+
+  const calculateEconomyRate = (player) => {
+    if (player.ballsBowled === 0) return 0;
+    const overs = player.ballsBowled / 6;
+    return player.runsConceded / overs;
+  };
+
+  const calculatePoints = (player) => {
+    const battingAverage = calculateBattingAverage(player);
+    const battingStrikeRate = calculateBattingStrikeRate(player);
+    const economyRate = calculateEconomyRate(player);
+
+    // Calculate batting points: (Batting Strike Rate / 5 + Batting Average × 0.8)
+    const battingPoints = (battingStrikeRate / 5) + (battingAverage * 0.8);
+    
+    // Calculate bowling points
+    let bowlingPoints = 0;
+    if (player.wicketsTaken > 0) {
+      const bowlingStrikeRate = player.ballsBowled / player.wicketsTaken;
+      bowlingPoints = (500 / bowlingStrikeRate) + (140 / economyRate);
+    } else if (player.ballsBowled > 0) {
+      // If no wickets taken but has bowled, only use economy rate component
+      bowlingPoints = 140 / economyRate;
+    }
+
+    const totalPoints = battingPoints + bowlingPoints;
+    return totalPoints;
+  };
+
+  const calculateValue = (points) => {
+    // Value in Rupees = (9 × Points + 100) × 1000
+    const value = (9 * points + 100) * 1000;
+    // Round to nearest 50,000
+    return Math.round(value / 50000) * 50000;
+  };
+
   const applyFilters = () => {
     let result = [...players];
 
@@ -105,15 +168,19 @@ const PlayerStatsView = () => {
         break;
       case 'battingAverage':
         result.sort((a, b) => {
-          const avgA = a.inningsPlayed > 0 ? a.runsScored / a.inningsPlayed : 0;
-          const avgB = b.inningsPlayed > 0 ? b.runsScored / b.inningsPlayed : 0;
+          const avgA = calculateBattingAverage(a);
+          const avgB = calculateBattingAverage(b);
           return avgB - avgA;
         });
         break;
       case 'bowlingAverage':
         result.sort((a, b) => {
-          const avgA = a.wicketsTaken > 0 ? a.runsConceded / a.wicketsTaken : Infinity;
-          const avgB = b.wicketsTaken > 0 ? b.runsConceded / b.wicketsTaken : Infinity;
+          const avgA = calculateBowlingAverage(a);
+          const avgB = calculateBowlingAverage(b);
+          // Put undefined values at the end
+          if (avgA === undefined && avgB === undefined) return 0;
+          if (avgA === undefined) return 1;
+          if (avgB === undefined) return -1;
           return avgA - avgB;
         });
         break;
@@ -138,6 +205,15 @@ const PlayerStatsView = () => {
       university: '',
       sortBy: 'name'
     });
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('si-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
   };
 
   if (loading) {
@@ -233,87 +309,48 @@ const PlayerStatsView = () => {
           </Grid>
         </CardContent>
       </Card>
-      
-      {filteredPlayers.map((player) => (
-        <Card key={player._id} sx={{ mb: 3 }}>
-          <CardContent>
-            <Grid container spacing={3}>
-              {/* General Information */}
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" color="primary" gutterBottom>
-                  General Information
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableBody>
-                      <StatRow label="Name" value={player.name} />
-                      <StatRow label="University" value={player.university} />
-                      <StatRow label="Role" value={player.role} />
-                      <StatRow label="Matches Played" value={player.matchesPlayed} />
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Grid>
 
-              {/* Batting Statistics */}
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" color="primary" gutterBottom>
-                  Batting Statistics
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableBody>
-                      <StatRow label="Total Runs" value={player.runsScored} />
-                      <StatRow 
-                        label="Batting Average" 
-                        value={player.inningsPlayed > 0 
-                          ? (player.runsScored / player.inningsPlayed).toFixed(2) 
-                          : 'N/A'} 
-                      />
-                      <StatRow 
-                        label="Strike Rate" 
-                        value={player.ballsFaced > 0 
-                          ? ((player.runsScored / player.ballsFaced) * 100).toFixed(2) 
-                          : 'N/A'} 
-                      />
-                      <StatRow label="Balls Faced" value={player.ballsFaced} />
-                      <StatRow label="Innings Played" value={player.inningsPlayed} />
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Grid>
-
-              {/* Bowling Statistics */}
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" color="primary" gutterBottom>
-                  Bowling Statistics
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableBody>
-                      <StatRow label="Wickets" value={player.wicketsTaken} />
-                      <StatRow 
-                        label="Bowling Average" 
-                        value={player.wicketsTaken > 0 
-                          ? (player.runsConceded / player.wicketsTaken).toFixed(2) 
-                          : 'N/A'} 
-                      />
-                      <StatRow 
-                        label="Economy Rate" 
-                        value={player.oversBowled > 0 
-                          ? (player.runsConceded / player.oversBowled).toFixed(2) 
-                          : 'N/A'} 
-                      />
-                      <StatRow label="Overs Bowled" value={player.oversBowled} />
-                      <StatRow label="Runs Conceded" value={player.runsConceded} />
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Grid>
+      <Grid container spacing={3}>
+        {filteredPlayers.map((player) => {
+          const points = calculatePoints(player);
+          const value = calculateValue(points);
+          
+          return (
+            <Grid item xs={12} md={6} lg={4} key={player._id}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {player.name}
+                  </Typography>
+                  <Typography color="textSecondary" gutterBottom>
+                    {player.university} • {player.role}
+                  </Typography>
+                  <Divider sx={{ my: 2 }} />
+                  <TableContainer>
+                    <Table size="small">
+                      <TableBody>
+                        <StatRow label="Matches Played" value={player.matchesPlayed} />
+                        <StatRow label="Innings Played" value={player.inningsPlayed} />
+                        <StatRow label="Runs Scored" value={player.runsScored} />
+                        <StatRow label="Balls Faced" value={player.ballsFaced} />
+                        <StatRow label="Batting Average" value={formatStatValue(calculateBattingAverage(player))} />
+                        <StatRow label="Batting Strike Rate" value={formatStatValue(calculateBattingStrikeRate(player))} />
+                        <StatRow label="Wickets Taken" value={player.wicketsTaken} />
+                        <StatRow label="Balls Bowled" value={player.ballsBowled} />
+                        <StatRow label="Runs Conceded" value={player.runsConceded} />
+                        <StatRow label="Bowling Strike Rate" value={formatStatValue(calculateBowlingStrikeRate(player))} />
+                        <StatRow label="Bowling Average" value={formatStatValue(calculateBowlingAverage(player))} />
+                        <StatRow label="Points" value={formatStatValue(points)} />
+                        <StatRow label="Value" value={formatPrice(value)} />
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
             </Grid>
-          </CardContent>
-        </Card>
-      ))}
+          );
+        })}
+      </Grid>
     </Box>
   );
 };

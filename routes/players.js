@@ -12,6 +12,25 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get players by role
+router.get('/role/:role', async (req, res) => {
+  try {
+    const roleMap = {
+      'AllRounder': 'All-rounder',
+      'All-Rounder': 'All-rounder',
+      'All Rounder': 'All-rounder',
+      'Wicket Keeper': 'WicketKeeper',
+      'Wicket-Keeper': 'WicketKeeper'
+    };
+    
+    const normalizedRole = roleMap[req.params.role] || req.params.role;
+    const players = await Player.find({ role: normalizedRole });
+    res.json(players);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Create new player
 router.post('/', async (req, res) => {
   try {

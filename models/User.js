@@ -6,36 +6,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true,
-    minlength: 3
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true
+    trim: true
   },
   password: {
     type: String,
-    required: true,
-    minlength: 6
+    required: true
   },
-  isAdmin: {
-    type: Boolean,
-    default: false
-  },
-  favoriteTeams: [{
+  role: {
     type: String,
-    trim: true
-  }],
-  favoritePlayers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Player'
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now
+    enum: ['user', 'admin'],
+    default: 'user'
   }
 }, {
   timestamps: true
@@ -53,6 +33,11 @@ userSchema.pre('save', async function(next) {
     next(error);
   }
 });
+
+// Compare password method
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 const User = mongoose.model('User', userSchema);
 

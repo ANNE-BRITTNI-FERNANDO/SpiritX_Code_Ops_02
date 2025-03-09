@@ -1,70 +1,131 @@
-# Getting Started with Create React App
+# Spirit11 - Fantasy Cricket Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern fantasy cricket platform built with MERN stack that allows users to create teams, participate in matches, and track player statistics.
 
-## Available Scripts
+## Tech Stack
 
-In the project directory, you can run:
+- **Frontend:**
+  - React.js (v19.0.0)
+  - Material-UI (v6.4.7)
+  - Socket.io Client (v4.8.1)
 
-### `npm start`
+- **Backend:**
+  - Node.js with Express.js (v4.21.2)
+  - MongoDB with Mongoose (v8.12.1)
+  - Socket.io (v4.8.1)
+  - JSON Web Token for authentication
+  - Google's Generative AI integration
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Prerequisites
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Node.js (LTS version recommended)
+- MongoDB (v4.4 or higher)
+- npm or yarn package manager
 
-### `npm test`
+## Setup Instructions
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd spirit11
+   ```
 
-### `npm run build`
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. **Database Setup**
+   - Install MongoDB locally or use MongoDB Atlas
+   - Create a database named 'Spirit11'
+   - The application will automatically create required collections
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. **Environment Configuration**
+   Create a `.env` file in the root directory with the following variables:
+   ```
+   MONGODB_URI=mongodb://127.0.0.1:27017/Spirit11
+   JWT_SECRET=your_jwt_secret_key_here
+   GEMINI_API_KEY=your_gemini_api_key
+   PORT=5001
+   CLIENT_URL=http://localhost:3000
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+5. **Seed the Database (Optional)**
+   ```bash
+   npm run seed
+   ```
+   This will populate the database with initial player data.
 
-### `npm run eject`
+## Running the Application
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. **Development Mode**
+   ```bash
+   npm run dev
+   ```
+   This will start both the frontend (port 3000) and backend (port 5001) servers concurrently.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. **Frontend Only**
+   ```bash
+   npm start
+   ```
+   Access the application at http://localhost:3000
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+3. **Backend Only**
+   ```bash
+   npm run server
+   ```
+   The API server will run on http://localhost:5001
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Features
 
-## Learn More
+- User authentication and authorization
+- Real-time match updates using Socket.io
+- Player statistics tracking and analysis
+- Team creation and management
+- Admin dashboard for player stats management
+- AI-powered insights using Google's Generative AI
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Assumptions and Design Decisions
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. **Database:**
+   - MongoDB is used for flexible schema design and scalability
+   - Local MongoDB instance is preferred for development
 
-### Code Splitting
+2. **Authentication:**
+   - JWT-based authentication with token expiration
+   - Secure password hashing using bcryptjs
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+3. **Real-time Updates:**
+   - Socket.io for live match updates and notifications
+   - Client-server synchronization for real-time data
 
-### Analyzing the Bundle Size
+## Additional Features
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. **AI Integration:**
+   - Integrated Google's Generative AI for match insights
+   - Smart player recommendations
 
-### Making a Progressive Web App
+2. **Admin Controls:**
+   - Comprehensive admin dashboard
+   - Player statistics management
+   - Real-time data updates
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Testing
 
-### Advanced Configuration
+```bash
+npm test
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Building for Production
 
-### Deployment
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Contributing
 
-### `npm run build` fails to minify
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

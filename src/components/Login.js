@@ -7,17 +7,19 @@ import {
   Button,
   Typography,
   Alert,
-  Link
+  Link,
+  CircularProgress
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import axios from '../config/axios';  // Updated import path
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -31,9 +33,11 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    if (!formData.email || !formData.password) {
-      setError('Please provide both email and password');
+    if (!formData.username || !formData.password) {
+      setError('Please provide both username and password');
+      setLoading(false);
       return;
     }
 
@@ -57,7 +61,9 @@ const Login = ({ onLogin }) => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError(err.response?.data?.message || 'Invalid username or password');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,12 +86,12 @@ const Login = ({ onLogin }) => {
               margin="normal"
               required
               fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
+              id="username"
+              label="Username"
+              name="username"
+              autoComplete="username"
               autoFocus
-              value={formData.email}
+              value={formData.username}
               onChange={handleChange}
             />
             <TextField
@@ -105,8 +111,9 @@ const Login = ({ onLogin }) => {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
             >
-              Sign In
+              {loading ? <CircularProgress size={24} /> : 'Sign In'}
             </Button>
           </form>
 

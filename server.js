@@ -54,6 +54,8 @@ io.on('connection', (socket) => {
 const authRoutes = require('./routes/auth');
 const playerRoutes = require('./routes/players');
 const userRoutes = require('./routes/users');
+const userTeamRoutes = require('./routes/userTeam');
+const chatbotRoutes = require('./routes/chatbot');
 
 // Test route
 app.get('/api/test', (req, res) => {
@@ -68,7 +70,9 @@ app.use('/api/auth', (req, res, next) => {
 }, authRoutes);
 
 app.use('/api/players', playerRoutes);
+app.use('/api/team', userTeamRoutes);
 app.use('/api/users', auth, userRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

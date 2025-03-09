@@ -47,7 +47,11 @@ const PlayersList = () => {
     role: 'Batsman',
     matchesPlayed: 0,
     runsScored: 0,
-    wicketsTaken: 0
+    ballsFaced: 0,
+    inningsPlayed: 0,
+    wicketsTaken: 0,
+    ballsBowled: 0,
+    runsConceded: 0
   });
 
   useEffect(() => {
@@ -93,7 +97,11 @@ const PlayersList = () => {
         role: player.role,
         matchesPlayed: player.matchesPlayed,
         runsScored: player.runsScored,
-        wicketsTaken: player.wicketsTaken
+        ballsFaced: player.ballsFaced,
+        inningsPlayed: player.inningsPlayed,
+        wicketsTaken: player.wicketsTaken,
+        ballsBowled: player.ballsBowled,
+        runsConceded: player.runsConceded
       });
       setSelectedPlayer(player);
     } else {
@@ -103,7 +111,11 @@ const PlayersList = () => {
         role: 'Batsman',
         matchesPlayed: 0,
         runsScored: 0,
-        wicketsTaken: 0
+        ballsFaced: 0,
+        inningsPlayed: 0,
+        wicketsTaken: 0,
+        ballsBowled: 0,
+        runsConceded: 0
       });
       setSelectedPlayer(null);
     }
@@ -119,7 +131,11 @@ const PlayersList = () => {
       role: 'Batsman',
       matchesPlayed: 0,
       runsScored: 0,
-      wicketsTaken: 0
+      ballsFaced: 0,
+      inningsPlayed: 0,
+      wicketsTaken: 0,
+      ballsBowled: 0,
+      runsConceded: 0
     });
   };
 
@@ -148,6 +164,11 @@ const PlayersList = () => {
         showSnackbar(error.response?.data?.message || 'Delete failed', 'error');
       }
     }
+  };
+
+  const formatStatValue = (value) => {
+    if (value === undefined || value === 'Not Available') return 'Not Available';
+    return typeof value === 'number' ? value.toFixed(2) : value;
   };
 
   const showSnackbar = (message, severity = 'success') => {
@@ -181,8 +202,16 @@ const PlayersList = () => {
               <TableCell>University</TableCell>
               <TableCell>Role</TableCell>
               <TableCell align="right">Matches</TableCell>
+              <TableCell align="right">Innings</TableCell>
               <TableCell align="right">Runs</TableCell>
+              <TableCell align="right">Balls Faced</TableCell>
+              <TableCell align="right">Batting Avg</TableCell>
+              <TableCell align="right">Strike Rate</TableCell>
               <TableCell align="right">Wickets</TableCell>
+              <TableCell align="right">Balls Bowled</TableCell>
+              <TableCell align="right">Runs Conceded</TableCell>
+              <TableCell align="right">Bowl Avg</TableCell>
+              <TableCell align="right">Bowl SR</TableCell>
               <TableCell align="right">Points</TableCell>
               <TableCell align="right">Value</TableCell>
               {admin && <TableCell align="center">Actions</TableCell>}
@@ -202,12 +231,18 @@ const PlayersList = () => {
                   <TableCell>{player.university}</TableCell>
                   <TableCell>{player.role}</TableCell>
                   <TableCell align="right">{player.matchesPlayed}</TableCell>
+                  <TableCell align="right">{player.inningsPlayed}</TableCell>
                   <TableCell align="right">{player.runsScored}</TableCell>
+                  <TableCell align="right">{player.ballsFaced}</TableCell>
+                  <TableCell align="right">{formatStatValue(player.battingAverage)}</TableCell>
+                  <TableCell align="right">{formatStatValue(player.battingStrikeRate)}</TableCell>
                   <TableCell align="right">{player.wicketsTaken}</TableCell>
-                  <TableCell align="right">{player.points}</TableCell>
-                  <TableCell align="right">
-                    ₹{player.value.toLocaleString()}
-                  </TableCell>
+                  <TableCell align="right">{player.ballsBowled}</TableCell>
+                  <TableCell align="right">{player.runsConceded}</TableCell>
+                  <TableCell align="right">{formatStatValue(player.bowlingAverage)}</TableCell>
+                  <TableCell align="right">{formatStatValue(player.bowlingStrikeRate)}</TableCell>
+                  <TableCell align="right">{formatStatValue(player.points)}</TableCell>
+                  <TableCell align="right">රු. {(player.price || 0).toLocaleString()}</TableCell>
                   {admin && (
                     <TableCell align="center">
                       <IconButton
@@ -236,11 +271,12 @@ const PlayersList = () => {
           </TableBody>
         </Table>
         <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
           component="div"
           count={players.length}
+          rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </TableContainer>
@@ -298,6 +334,16 @@ const PlayersList = () => {
             <TextField
               fullWidth
               type="number"
+              label="Innings Played"
+              name="inningsPlayed"
+              value={formData.inningsPlayed}
+              onChange={(e) => setFormData({ ...formData, inningsPlayed: parseInt(e.target.value) })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              type="number"
               label="Runs Scored"
               name="runsScored"
               value={formData.runsScored}
@@ -308,10 +354,40 @@ const PlayersList = () => {
             <TextField
               fullWidth
               type="number"
+              label="Balls Faced"
+              name="ballsFaced"
+              value={formData.ballsFaced}
+              onChange={(e) => setFormData({ ...formData, ballsFaced: parseInt(e.target.value) })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              type="number"
               label="Wickets Taken"
               name="wicketsTaken"
               value={formData.wicketsTaken}
               onChange={(e) => setFormData({ ...formData, wicketsTaken: parseInt(e.target.value) })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              type="number"
+              label="Balls Bowled"
+              name="ballsBowled"
+              value={formData.ballsBowled}
+              onChange={(e) => setFormData({ ...formData, ballsBowled: parseInt(e.target.value) })}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              type="number"
+              label="Runs Conceded"
+              name="runsConceded"
+              value={formData.runsConceded}
+              onChange={(e) => setFormData({ ...formData, runsConceded: parseInt(e.target.value) })}
               margin="normal"
               required
             />

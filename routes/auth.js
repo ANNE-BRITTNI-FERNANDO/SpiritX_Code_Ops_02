@@ -9,28 +9,25 @@ const Admin = require('../models/Admin');
 router.post('/register', async (req, res) => {
   try {
     console.log('Registration request received:', req.body);
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
 
     // Validate input
-    if (!username || !email || !password) {
+    if (!username || !password) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }]
-    });
+    const existingUser = await User.findOne({ username });
 
     if (existingUser) {
       return res.status(400).json({ 
-        message: 'User with this email or username already exists'
+        message: 'User with this username already exists'
       });
     }
 
     // Create new user
     const user = new User({
       username,
-      email,
       password // Password will be hashed by the model's pre-save middleware
     });
 
@@ -39,7 +36,7 @@ router.post('/register', async (req, res) => {
 
     // Generate token
     const token = jwt.sign(
-      { _id: user._id, email: user.email, role: 'user' },
+      { _id: user._id, username: user.username, role: 'user' },
       process.env.JWT_SECRET || 'your_jwt_secret_key_here',
       { expiresIn: '7d' }
     );
@@ -50,8 +47,7 @@ router.post('/register', async (req, res) => {
       username: user.username,
       user: {
         id: user._id,
-        username: user.username,
-        email: user.email
+        username: user.username
       }
     });
   } catch (error) {
@@ -63,23 +59,23 @@ router.post('/register', async (req, res) => {
 // User Login
 router.post('/login', async (req, res) => {
   try {
-    console.log('Login request received:', { email: req.body.email });
-    const { email, password } = req.body;
+    console.log('Login request received:', { username: req.body.username });
+    const { username, password } = req.body;
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Please provide username and password' });
     }
 
     // Try to find user first
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ username });
     let isAdmin = false;
 
     // If user not found, try admin
     if (!user) {
-      const admin = await Admin.findOne({ email });
+      const admin = await Admin.findOne({ username });
       if (!admin) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        return res.status(401).json({ message: 'Invalid username or password' });
       }
       user = admin;
       isAdmin = true;
@@ -88,21 +84,21 @@ router.post('/login', async (req, res) => {
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     // Generate token
     const token = jwt.sign(
       { 
         _id: user._id, 
-        email: user.email, 
+        username: user.username, 
         role: isAdmin ? 'admin' : 'user' 
       },
       process.env.JWT_SECRET || 'your_jwt_secret_key_here',
       { expiresIn: '7d' }
     );
 
-    console.log('Login successful for:', email, 'Role:', isAdmin ? 'admin' : 'user');
+    console.log('Login successful for:', username, 'Role:', isAdmin ? 'admin' : 'user');
 
     res.json({
       token,
@@ -110,8 +106,7 @@ router.post('/login', async (req, res) => {
       username: user.username,
       user: {
         id: user._id,
-        username: user.username,
-        email: user.email
+        username: user.username
       }
     });
   } catch (error) {
@@ -140,7 +135,6 @@ router.get('/me', async (req, res) => {
         user: {
           id: admin._id,
           username: admin.username,
-          email: admin.email,
           role: 'admin'
         }
       });
@@ -155,7 +149,6 @@ router.get('/me', async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email,
         role: 'user'
       }
     });
