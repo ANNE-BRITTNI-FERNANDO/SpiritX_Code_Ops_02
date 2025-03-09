@@ -1,4 +1,4 @@
-# Spirit11 - Fantasy Cricket Platform
+![image](https://github.com/user-attachments/assets/75390a53-0be7-4f79-b5de-41a3ee44703f)# Spirit11 - Fantasy Cricket Platform
 
 A modern fantasy cricket platform built with MERN stack that allows users to create teams, participate in matches, and track player statistics.
 
@@ -50,9 +50,10 @@ A modern fantasy cricket platform built with MERN stack that allows users to cre
    CLIENT_URL=http://localhost:3000
    ```
 
-5. **Seed the Database (Optional)**
+5. **Seed the Database**
    ```bash
    npm run seed
+   node scripts/updatePlayerStats.js
    ```
    This will populate the database with initial player data.
 
