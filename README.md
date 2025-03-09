@@ -113,3 +113,22 @@ A modern fantasy cricket platform built with MERN stack that allows users to cre
    - Player statistics management
    - Real-time data updates
 
+## Testing
+
+```bash
+npm test
+```
+
+## Building for Production
+
+```bash
+npm run build
+```
+
+## Contributing
+
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
