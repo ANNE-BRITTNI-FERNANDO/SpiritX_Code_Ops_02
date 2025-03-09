@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/75390a53-0be7-4f79-b5de-41a3ee44703f)# Spirit11 - Fantasy Cricket Platform
+# Spirit11 - Fantasy Cricket Platform
 
 A modern fantasy cricket platform built with MERN stack that allows users to create teams, participate in matches, and track player statistics.
 
