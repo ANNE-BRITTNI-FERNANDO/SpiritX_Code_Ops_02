@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './components/Login';
 import UserDashboard from './components/user/UserDashboard';
 import AdminDashboard from './components/admin/AdminDashboard';
+import UserRegister from './components/UserRegister';
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -39,6 +40,7 @@ const App = () => {
           path="/" 
           element={<Navigate to="/login" />} 
         />
+        <Route path="/register" element={<UserRegister />} />
       </Routes>
     </Router>
   );

@@ -99,6 +99,9 @@ A modern fantasy cricket platform built with MERN stack that allows users to cre
    - Socket.io for live match updates and notifications
    - Client-server synchronization for real-time data
 
+4. **Team Selection Constraint**
+    - Upto 5 Batsman, 4 Bowlers, 2 All-Roundersand a Wicket Keeper (Optional) can be selected.
+
 ## Additional Features
 
 1. **AI Integration:**
@@ -110,22 +113,3 @@ A modern fantasy cricket platform built with MERN stack that allows users to cre
    - Player statistics management
    - Real-time data updates
 
-## Testing
-
-```bash
-npm test
-```
-
-## Building for Production
-
-```bash
-npm run build
-```
-
-## Contributing
-
-Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

@@ -11,49 +11,72 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import axios from '../config/axios';  // Updated import path
+import axios from '../config/axios';
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    username: '',
+    password: '',
+    submit: ''
+  });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'username':
+        if (!value.trim()) return 'Username is required';
+        return '';
+      case 'password':
+        if (!value.trim()) return 'Password is required';
+        return '';
+      default:
+        return '';
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({
+      ...prev,
+      [name]: validateField(name, value),
+      submit: '' // Clear submit error when user types
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setErrors({ username: '', password: '', submit: '' });
 
-    if (!formData.username || !formData.password) {
-      setError('Please provide both username and password');
-      setLoading(false);
+    // Validate all fields
+    const newErrors = {};
+    Object.keys(formData).forEach(key => {
+      const error = validateField(key, formData[key]);
+      if (error) newErrors[key] = error;
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors({ ...newErrors, submit: '' });
       return;
     }
+
+    setLoading(true);
 
     try {
       const response = await axios.post('/api/auth/login', formData);
       const { token, role, username } = response.data;
       
-      // Store token and user info in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('userRole', role);
       localStorage.setItem('username', username);
       
-      // Call the onLogin callback with token and role
       onLogin(token, role);
 
-      // Redirect based on role
       if (role === 'admin') {
         navigate('/admin/dashboard');
       } else {
@@ -61,7 +84,10 @@ const Login = ({ onLogin }) => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Invalid username or password');
+      setErrors(prev => ({
+        ...prev,
+        submit: err.response?.data?.message || 'Invalid username or password'
+      }));
     } finally {
       setLoading(false);
     }
@@ -75,9 +101,9 @@ const Login = ({ onLogin }) => {
             Spirit11 Login
           </Typography>
 
-          {error && (
+          {errors.submit && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+              {errors.submit}
             </Alert>
           )}
 
@@ -93,6 +119,9 @@ const Login = ({ onLogin }) => {
               autoFocus
               value={formData.username}
               onChange={handleChange}
+              error={!!errors.username}
+              helperText={errors.username}
+              disabled={loading}
             />
             <TextField
               margin="normal"
@@ -105,6 +134,9 @@ const Login = ({ onLogin }) => {
               autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
+              error={!!errors.password}
+              helperText={errors.password}
+              disabled={loading}
             />
             <Button
               type="submit"
